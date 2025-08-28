@@ -1,6 +1,7 @@
 <?php
 session_start();
 include("../config/conn.php");
+include '../includes/studentnav.php'; // navbar
 
 // Make sure student is logged in
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
@@ -34,29 +35,41 @@ $result = $stmt->get_result();
 <head>
     <meta charset="UTF-8">
     <title>My Applications</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <h1>My Applications</h1>
+    <!-- Navbar -->
+  
 
-    <?php if ($result->num_rows > 0): ?>
-        <table border="1" cellpadding="8" cellspacing="0">
-            <tr>
-                <th>Job Title</th>
-                <th>Department</th>
-                <th>Status</th>
-                <th>Date Applied</th>
-            </tr>
-            <?php while ($row = $result->fetch_assoc()): ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($row['job_title']); ?></td>
-                    <td><?php echo htmlspecialchars($row['department_name']); ?></td>
-                    <td><?php echo htmlspecialchars($row['status']); ?></td>
-                    <td><?php echo htmlspecialchars($row['created_at']); ?></td>
-                </tr>
-            <?php endwhile; ?>
-        </table>
-    <?php else: ?>
-        <p>You have not applied for any jobs yet.</p>
-    <?php endif; ?>
+    <div class="container mt-4">
+        <h1>My Applications</h1>
+
+        <?php if ($result->num_rows > 0): ?>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Date Applied</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while ($row = $result->fetch_assoc()): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($row['job_title']); ?></td>
+                            <td><?php echo htmlspecialchars($row['department_name']); ?></td>
+                            <td><?php echo htmlspecialchars(ucfirst($row['status'])); ?></td>
+                            <td><?php echo htmlspecialchars($row['created_at']); ?></td>
+                        </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <p>You have not applied for any jobs yet.</p>
+        <?php endif; ?>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

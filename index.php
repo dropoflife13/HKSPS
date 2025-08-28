@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// If user is logged in, redirect by role
 if (isset($_SESSION['role'])) {
     switch ($_SESSION['role']) {
         case 'admin':
@@ -16,7 +15,6 @@ if (isset($_SESSION['role'])) {
     }
 }
 
-// Not logged in → show landing page
 header("Location: landing.php");
 exit;
 ?>

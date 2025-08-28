@@ -11,7 +11,8 @@ $teacherId = $_SESSION['user_id'];
 
 // Fetch teacher's duties
 $stmt = $conn->prepare("
-    SELECT jp.*, d.name AS department_name 
+    SELECT jp.*, d.name AS department_name,
+           (SELECT COUNT(*) FROM applications a WHERE a.job_id = jp.id AND a.status = 'approved') AS accepted_applicants
     FROM job_postings jp
     LEFT JOIN departments d ON jp.department_id = d.id
     WHERE jp.posted_by_id = ?
@@ -48,10 +49,11 @@ $result = $stmt->get_result();
                     <p><?= htmlspecialchars($duty['description']) ?></p>
                     <p><strong>Schedule:</strong> <?= htmlspecialchars($duty['schedule']) ?></p>
                     <p><strong>Status:</strong> <?= htmlspecialchars($duty['status']) ?></p>
+                    <p><strong>Max Applicants:</strong> <?= $duty['max_applicants'] ?></p>
+                    <p><strong>Accepted Applicants:</strong> <?= $duty['accepted_applicants'] ?></p>
                     <div class="d-flex gap-2">
                         <a href="duties/update-duty.php?id=<?= $duty['id'] ?>" class="btn btn-primary btn-sm">Edit</a>
-                      <a href=".  /duties/delete-duty.php?id=<?= $duty['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</a>
-
+                        <a href="duties/delete-duty.php?id=<?= $duty['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</a>
                     </div>
                 </div>
             </div>

@@ -1,54 +1,78 @@
 <?php
 session_start();
-include("../config/conn.php");
-
-// Ensure the user is logged in and is a teacher
-if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'teacher') {
+if (!isset($_SESSION['user_name']) || !isset($_SESSION['role'])) {
     header("Location: ../Auth/login.php");
     exit();
 }
-$teacherName = $_SESSION['user_name'];
+
+$userName = htmlspecialchars($_SESSION['user_name']);
+$userRole = $_SESSION['role']; // 'student', 'teacher', 'admin'
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>Teacher Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= ucfirst($userRole) ?> Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-<div class="container-fluid">
-    <div class="row">
-        <?php include '../includes/teachernav.php'; ?> <!-- sidebar -->
 
-        <main class="col-md-10 ms-sm-auto px-md-4">
-            <div class="pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Welcome, Prof. <?= htmlspecialchars($teacherName); ?>!</h1>
-            </div>
-            <p>Use the sidebar to navigate through your teacher dashboard.</p>
+<body class="bg-gray-100">
 
-            <div class="card mt-4">
-                <div class="card-body">
-                    <h5 class="card-title">Quick Actions</h5>
-                    <ul>
-                        <li><a href="duties.php">View Duties</a></li>
-                        <li><a href="create-duty.php">Create Duty</a></li>
-                        <li><a href="my-post.php">My Job Postings</a></li>
-                        <li><a href="submit-report.php">Submit Report</a></li>
-                    </ul>
+
+    <?php include '../includes/sidebar.php' ?>
+    <div class="flex min-h-screen">
+        <!-- Overlay for mobile -->
+        <div id="overlay" class="fixed inset-0 bg-black opacity-25 z-30 hidden md:hidden"></div>
+
+        <!-- Main Content -->
+        <main class="flex-1 ml-0 md:ml-64  transition-all duration-300">
+            <?php include '../includes/header.php' ?>
+            <div class="py-6 px-4 transition-all duration-300">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Welcome to your Dashboard</h1>
+
+                <!-- Example content -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white shadow rounded p-4">
+                        <h2 class="font-semibold text-lg mb-2">Quick Links</h2>
+                        <ul class="text-gray-600 space-y-1">
+                            <li><a href="apply.php" class="hover:underline text-blue-500">Apply for Duty</a></li>
+                            <li><a href="my-application.php" class="hover:underline text-blue-500">View Applications</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-white shadow rounded p-4">
+                        <h2 class="font-semibold text-lg mb-2">Recent Activities</h2>
+                        <p class="text-gray-600">No recent activities yet.</p>
+                    </div>
+                    <div class="bg-white shadow rounded p-4">
+                        <h2 class="font-semibold text-lg mb-2">Profile Info</h2>
+                        <p class="text-gray-600">Name: <?= $userName ?></p>
+                        <p class="text-gray-600">Role: <?= ucfirst($userRole) ?></p>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
-</div>
 
+    <script>
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-...
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-64');
+            overlay.classList.toggle('hidden');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-64');
+            overlay.classList.add('hidden');
+        });
+    </script>
 
 </body>
+
 </html>
