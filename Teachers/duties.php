@@ -39,6 +39,7 @@ $result = $stmt->get_result();
             <tr>
                 <td><?= htmlspecialchars($row['title']) ?></td>
                 <td><?= htmlspecialchars($row['description']) ?></td>
+                
                 <td><?= $row['posted_date'] ?></td>
                 <td><?= $row['deadline'] ?></td>
                 <td><span class="badge bg-secondary"><?= ucfirst($row['status']) ?></span></td>

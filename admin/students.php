@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['id'], $_POST['name'],
     $stmt->bind_param("sssi", $name, $email, $role, $id);
 
     if ($stmt->execute()) {
-        header("Location: manage-users.php"); // Redirect after update
+        header("Location: students.php"); // Redirect after update
         exit();
     } else {
         $msg = "❌ Error: " . $conn->error;
@@ -76,7 +76,7 @@ $users = $conn->query("SELECT * FROM users WHERE role = 'student' ORDER BY id AS
                         Edit
                     </button>
                     <!-- Delete -->
-                    <a href="manage-users.php?delete_id=<?= $user['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">
+                    <a href="students.php?delete_id=<?= $user['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">
                         Delete
                     </a>
                 </td>

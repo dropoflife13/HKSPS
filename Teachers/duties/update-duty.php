@@ -2,6 +2,7 @@
 session_start();
 include("../../config/conn.php");
 
+// Only teachers allowed
 if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'teacher') {
     header("Location: ../Auth/login.php");
     exit();
@@ -20,6 +21,7 @@ $duty = $result->fetch_assoc();
 if (!$duty) die("Duty not found or access denied.");
 
 // Handle update
+$errorMsg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $_POST['title'];
     $description = $_POST['description'];
@@ -28,18 +30,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $department_id = $_POST['department_id'];
     $requirements = $_POST['requirements'];
     $location = $_POST['location'];
-    $max_applicants = $_POST['max_applicants'];
+    $max_applicants = (int)$_POST['max_applicants'];
 
-    $stmt = $conn->prepare("
-        UPDATE job_postings
-        SET title=?, description=?, schedule=?, status=?, department_id=?, requirements=?, location=?, max_applicants=?
-        WHERE id=? AND posted_by_id=?
-    ");
-    $stmt->bind_param("ssssisiiii", $title, $description, $schedule, $status, $department_id, $requirements, $location, $max_applicants, $id, $teacherId);
-    $stmt->execute();
+    // Validate max applicants
+    if ($max_applicants < $duty['current_applicants']) {
+        $errorMsg = "Max applicants cannot be less than current applicants ({$duty['current_applicants']}).";
+    } else {
+        $stmt = $conn->prepare("
+            UPDATE job_postings
+            SET title=?, description=?, schedule=?, status=?, department_id=?, requirements=?, location=?, max_applicants=?
+            WHERE id=? AND posted_by_id=?
+        ");
+        $stmt->bind_param("ssssisiiii", $title, $description, $schedule, $status, $department_id, $requirements, $location, $max_applicants, $id, $teacherId);
+        $stmt->execute();
 
-    header("Location: ../my-post.php");
-    exit();
+        header("Location: ../post-duty.php");
+        exit();
+    }
 }
 
 // Fetch departments
@@ -55,12 +62,15 @@ $departments = $conn->query("SELECT id, name FROM departments ORDER BY name");
 </head>
 <body>
 
-
 <main style="margin-left:250px; padding:20px; max-width:800px;">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h4">Update Duty</h1>
-        <a href="../my-post.php" class="btn btn-secondary btn-sm">Go Back</a>
+        <a href="../post-duty.php" class="btn btn-secondary btn-sm">Go Back</a>
     </div>
+
+    <?php if ($errorMsg): ?>
+        <div class="alert alert-danger"><?= htmlspecialchars($errorMsg) ?></div>
+    <?php endif; ?>
 
     <form method="POST">
         <div class="row g-2 mb-3">
@@ -102,7 +112,8 @@ $departments = $conn->query("SELECT id, name FROM departments ORDER BY name");
             </div>
             <div class="col-md-6">
                 <label class="form-label">Max Applicants</label>
-                <input type="number" name="max_applicants" class="form-control form-control-sm" value="<?= $duty['max_applicants'] ?>" min="1">
+                <input type="number" name="max_applicants" class="form-control form-control-sm" value="<?= $duty['max_applicants'] ?>" min="<?= $duty['current_applicants'] ?>">
+                <small class="text-muted">Current applicants: <?= $duty['current_applicants'] ?></small>
             </div>
         </div>
 
