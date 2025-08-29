@@ -1,7 +1,4 @@
 <?php
-session_start();
-include("../config/conn.php");
-$_SESSION['user_name'] = $_SESSION['user_name'] ?? 'Admin';
 
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -24,17 +21,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 $settings = $conn->query("SELECT * FROM settings WHERE id=1")->fetch_assoc();
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Settings</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-<div class="container-fluid">
-    <div class="row">
-        <?php include '../includes/sidebar.php'; ?>
 
         <main class="col-md-10 ms-sm-auto px-md-4 mt-3">
             <h1 class="h2 mb-3">Settings</h1>
@@ -71,9 +57,4 @@ $settings = $conn->query("SELECT * FROM settings WHERE id=1")->fetch_assoc();
                 <button type="submit" class="btn btn-primary">Save Settings</button>
             </form>
         </main>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    

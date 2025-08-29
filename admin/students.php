@@ -1,7 +1,5 @@
 <?php
-session_start();
-include("../config/conn.php"); // DB connection
-$_SESSION['user_name'] = $_SESSION['user_name'] ?? 'Admin';
+
 
 // Handle form submission for updating a user
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['id'], $_POST['name'], $_POST['email'], $_POST['role'])) {
@@ -27,17 +25,6 @@ $users = $conn->query("SELECT * FROM users WHERE role = 'student' ORDER BY id AS
 
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Manage Users</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-<div class="container-fluid">
-    <div class="row">
-        <?php include '../includes/sidebar.php'; ?>
 
         <main class="col-md-10 ms-sm-auto px-md-4 mt-3">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
@@ -128,9 +115,4 @@ $users = $conn->query("SELECT * FROM users WHERE role = 'student' ORDER BY id AS
 </table>
 
         </main>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    
