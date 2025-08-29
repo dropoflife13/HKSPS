@@ -1,18 +1,12 @@
 <?php
-session_start();
-include("../config/conn.php");
-
-if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'teacher') {
-    header("Location: ../Auth/login.php");
-    exit();
-}
 
 $teacherId = $_SESSION['user_id'];
 
-// Fetch teacher's duties
 $stmt = $conn->prepare("
     SELECT jp.*, d.name AS department_name,
-           (SELECT COUNT(*) FROM applications a WHERE a.job_id = jp.id AND a.status = 'approved') AS accepted_applicants
+           (SELECT COUNT(*) 
+            FROM applications a 
+            WHERE a.job_id = jp.id AND a.status = 'approved') AS accepted_applicants
     FROM job_postings jp
     LEFT JOIN departments d ON jp.department_id = d.id
     WHERE jp.posted_by_id = ?
@@ -23,42 +17,47 @@ $stmt->execute();
 $result = $stmt->get_result();
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>My Duties</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-<?php include '../includes/teachernav.php'; ?>
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">My Duties</h1>
+    <a href="index.php?page=duties/create-duty" 
+       class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-md transition">
+        + Create Duty
+    </a>
+</div>
 
-<main style="margin-left:250px; padding:20px;">
-    <div class="d-flex justify-content-between mb-3">
-        <h1>My Duties</h1>
-        <a href="./duties/create-duty.php" class="btn btn-success">+ Create Duty</a>
+<?php if ($result->num_rows === 0): ?>
+    <div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg shadow-sm">
+        No duties posted yet.
     </div>
-
-    <?php if ($result->num_rows === 0): ?>
-        <div class="alert alert-info">No duties posted yet.</div>
-    <?php else: ?>
+<?php else: ?>
+    <div class="space-y-4">
         <?php while($duty = $result->fetch_assoc()): ?>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5><?= htmlspecialchars($duty['title']) ?> <small>(<?= htmlspecialchars($duty['department_name']) ?>)</small></h5>
-                    <p><?= htmlspecialchars($duty['description']) ?></p>
-                    <p><strong>Schedule:</strong> <?= htmlspecialchars($duty['schedule']) ?></p>
-                    <p><strong>Status:</strong> <?= htmlspecialchars($duty['status']) ?></p>
-                    <p><strong>Max Applicants:</strong> <?= $duty['max_applicants'] ?></p>
-                    <p><strong>Accepted Applicants:</strong> <?= $duty['accepted_applicants'] ?></p>
-                    <div class="d-flex gap-2">
-                        <a href="duties/update-duty.php?id=<?= $duty['id'] ?>" class="btn btn-primary btn-sm">Edit</a>
-                        <a href="duties/delete-duty.php?id=<?= $duty['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</a>
-                    </div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 hover:shadow-md transition">
+                <h2 class="text-xl font-semibold text-gray-800">
+                    <?= htmlspecialchars($duty['title']) ?> 
+                    <span class="text-sm text-gray-500">(<?= htmlspecialchars($duty['department_name']) ?>)</span>
+                </h2>
+                <p class="text-gray-600 mt-2"><?= htmlspecialchars($duty['description']) ?></p>
+
+                <div class="mt-3 space-y-1 text-sm text-gray-700">
+                    <p><span class="font-medium">Schedule:</span> <?= htmlspecialchars($duty['schedule']) ?></p>
+                    <p><span class="font-medium">Status:</span> <?= htmlspecialchars($duty['status']) ?></p>
+                    <p><span class="font-medium">Max Applicants:</span> <?= $duty['max_applicants'] ?></p>
+                    <p><span class="font-medium">Accepted Applicants:</span> <?= $duty['accepted_applicants'] ?></p>
+                </div>
+
+                <div class="flex gap-3 mt-4">
+                    <a href="index.php?page=duties/update-duty&id=<?= $duty['id'] ?>" 
+                       class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-sm rounded-lg shadow-sm transition">
+                        Edit
+                    </a>
+                    <a href="index.php?page=duties/delete-duty&id=<?= $duty['id'] ?>" 
+                       onclick="return confirm('Are you sure?')" 
+                       class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 text-sm rounded-lg shadow-sm transition">
+                        Delete
+                    </a>
                 </div>
             </div>
         <?php endwhile; ?>
-    <?php endif; ?> 
-</main>
-</body>
-</html>
+    </div>
+<?php endif; ?>

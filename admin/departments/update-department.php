@@ -1,7 +1,4 @@
 <?php
-session_start();
-include("../../config/con.php");
-
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $id = $_POST['id'];
     $name = $_POST['name'];

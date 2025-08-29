@@ -1,15 +1,6 @@
 <?php
-session_start();
-include("../config/conn.php");
-
-if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'teacher') {
-    header("Location: ../Auth/login.php");
-    exit();
-}
-
 $teacherId = $_SESSION['user_id'];
 
-// Fetch all accepted students for this teacher’s duties
 $stmt = $conn->prepare("
     SELECT u.id, u.name AS student_name, j.title AS duty_title
     FROM applications a
@@ -21,17 +12,6 @@ $stmt->bind_param("i", $teacherId);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Facilitators</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-
-    <!-- Teacher Navbar -->
-    <?php include '../includes/teachernav.php'; ?>
-
     <div class="container mt-4">
         <h1>My Facilitators</h1>
 
@@ -51,6 +31,3 @@ $result = $stmt->get_result();
 
         <a href="index.php" class="btn btn-secondary mt-3">⬅ Go Back</a>
     </div>
-
-</body>
-</html>

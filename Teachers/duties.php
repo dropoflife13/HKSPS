@@ -1,7 +1,4 @@
 <?php
-session_start();
-include("../config/conn.php");
-
 $teacherId = $_SESSION['user_id'] ?? 0;
 
 // Fetch filled (ongoing) duties posted by this teacher
@@ -13,15 +10,7 @@ $stmt->bind_param("i", $teacherId);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Ongoing Duties</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-     <?php include '../includes/teachernav.php'; ?>
+
 <div class="container mt-4">
     <h3>Ongoing Duties (Already Filled)</h3>
     <table class="table table-bordered">
@@ -48,5 +37,3 @@ $result = $stmt->get_result();
         </tbody>
     </table>
 </div>
-</body>
-</html>

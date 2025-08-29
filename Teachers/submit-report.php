@@ -1,12 +1,4 @@
 <?php
-session_start();
-include("../config/conn.php");
-
-// Ensure teacher is logged in
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
-    header("Location: ../Auth/login.php");
-    exit();
-}
 
 $msg = "";
 
@@ -26,40 +18,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Submit Report</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <?php include '../includes/teachernav.php'; ?>  
 
-    <main class="container mt-4">
-        <h2>Submit a Report</h2>
+<h1 class="text-2xl font-bold text-indigo-700 mb-6">Submit a Report</h1>
 
-        <?php if (!empty($msg)): ?>
-            <div class="alert alert-info"><?= $msg ?></div>
-        <?php endif; ?>
+<?php if (!empty($msg)): ?>
+    <div class="mb-4 px-4 py-3 rounded-lg shadow-sm 
+                <?= strpos($msg, '✅') !== false ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200' ?>">
+        <?= $msg ?>
+    </div>
+<?php endif; ?>
 
-        <form method="POST" class="card p-3 shadow-sm">
-            <div class="mb-3">
-                <label class="form-label">Title</label>
-                <input type="text" name="title" class="form-control" placeholder="Enter report title" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Description</label>
-                <textarea name="description" class="form-control" rows="5" placeholder="Describe your issue" required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">Submit Report</button>
-        </form>
-    </main>
+<form method="POST" class="bg-white shadow-md rounded-xl p-6 space-y-4">
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+        <input type="text" name="title" 
+               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+               placeholder="Enter report title" required>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-...
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <textarea name="description" rows="5"
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Describe your issue" required></textarea>
+    </div>
 
-</body>
-</html>
+    <button type="submit" 
+            class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg shadow-md transition">
+        Submit Report
+    </button>
+</form>

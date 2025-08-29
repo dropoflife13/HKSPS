@@ -23,7 +23,7 @@ $userName = htmlspecialchars($_SESSION['user_name']);
 
         <div class="flex items-center space-x-4">
             <span class="font-semibold">Welcome, <?= $userName ?></span>
-            <a href="../Auth/logout.php"
+            <a href="Auth/logout.php"
                 class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md font-semibold text-sm">Logout</a>
         </div>
     </div>

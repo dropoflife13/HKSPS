@@ -1,8 +1,4 @@
 <?php
-session_start();
-include("../config/conn.php");
-include ('../includes/teachernav.php'); 
-
 $teacherId = $_SESSION['user_id'] ?? 0;
 
 $sql = "SELECT a.id, u.name AS student_name, jp.title AS job_title, a.status, a.applied_date
@@ -15,14 +11,6 @@ $stmt->bind_param("i", $teacherId);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Applicants</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
 <div class="container mt-4">
     <h3>Applicants</h3>
     <table class="table table-bordered">
@@ -55,5 +43,3 @@ $result = $stmt->get_result();
         </tbody>
     </table>
 </div>
-</body>
-</html>

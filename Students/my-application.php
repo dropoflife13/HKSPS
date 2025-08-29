@@ -1,17 +1,6 @@
 <?php
-session_start();
-include("../config/conn.php");
-include '../includes/studentnav.php'; // navbar
+include("config/conn.php");
 
-// Make sure student is logged in
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
-    header("Location: ../Auth/login.php");
-    exit();
-}
-
-$studentId = $_SESSION['user_id'];
-
-// Fetch all applications of this student
 $stmt = $conn->prepare("
     SELECT 
         a.id AS application_id,
@@ -30,46 +19,45 @@ $stmt->execute();
 $result = $stmt->get_result();
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>My Applications</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <!-- Navbar -->
-  
+<h1 class="text-3xl font-bold text-gray-800 mb-6">My Applications</h1>
 
-    <div class="container mt-4">
-        <h1>My Applications</h1>
-
-        <?php if ($result->num_rows > 0): ?>
-            <table class="table table-striped">
-                <thead>
+<div class="bg-white shadow rounded-lg p-6">
+    <?php if ($result->num_rows > 0): ?>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-100">
                     <tr>
-                        <th>Job Title</th>
-                        <th>Department</th>
-                        <th>Status</th>
-                        <th>Date Applied</th>
+                        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Job Title</th>
+                        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Department</th>
+                        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
+                        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Date Applied</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-gray-200 text-sm text-gray-600">
                     <?php while ($row = $result->fetch_assoc()): ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($row['job_title']); ?></td>
-                            <td><?php echo htmlspecialchars($row['department_name']); ?></td>
-                            <td><?php echo htmlspecialchars(ucfirst($row['status'])); ?></td>
-                            <td><?php echo htmlspecialchars($row['created_at']); ?></td>
+                            <td class="px-4 py-2"><?php echo htmlspecialchars($row['job_title']); ?></td>
+                            <td class="px-4 py-2"><?php echo htmlspecialchars($row['department_name']); ?></td>
+                            <td class="px-4 py-2">
+                                <?php 
+                                    $statusColors = [
+                                        "pending" => "bg-yellow-100 text-yellow-800",
+                                        "approved" => "bg-green-100 text-green-800",
+                                        "rejected" => "bg-red-100 text-red-800"
+                                    ];
+                                    $statusClass = $statusColors[strtolower($row['status'])] ?? "bg-gray-100 text-gray-800";
+                                ?>
+                                <span class="px-2 py-1 rounded-full text-xs font-medium <?php echo $statusClass; ?>">
+                                    <?php echo ucfirst($row['status']); ?>
+                                </span>
+                            </td>
+                            <td class="px-4 py-2"><?php echo date("M d, Y", strtotime($row['created_at'])); ?></td>
                         </tr>
                     <?php endwhile; ?>
                 </tbody>
             </table>
-        <?php else: ?>
-            <p>You have not applied for any jobs yet.</p>
-        <?php endif; ?>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+        </div>
+    <?php else: ?>
+        <p class="text-gray-500">You have not applied for any jobs yet.</p>
+    <?php endif; ?>
+</div>

@@ -1,20 +1,9 @@
 <?php
-session_start();
-include '../config/conn.php'; // DB connection
-include '../includes/studentnav.php'; // navbar
-
-if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'student') {
-    header("Location: ../Auth/login.php");
-    exit();
-}
-
 $studentId = $_SESSION['user_id'];
 $department_id = $_GET['department_id'] ?? '';
 
-// Fetch all departments
 $dept_result = $conn->query("SELECT * FROM departments ORDER BY name ASC");
 
-// Fetch duties for students, exclude full duties and already applied jobs
 $query = "
     SELECT jp.*, u.name AS teacher_name,
            (SELECT COUNT(*) FROM applications a WHERE a.job_id = jp.id AND a.status = 'approved') AS accepted_applicants
@@ -44,22 +33,12 @@ $stmt->execute();
 $duties_result = $stmt->get_result();
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Browse Duties</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-    .urgent { border-left: 5px solid #dc3545; padding-left: 10px; }
-</style>
-</head>
-<body>
-<div class="container mt-4">
-    <h2>Browse Duties</h2>
+<div class="py-6 px-4 transition-all duration-300">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Browse Duties</h1>
 
-    <label for="department_id" class="form-label">Select Department:</label>
-    <select name="department_id" id="department_id" class="form-select w-auto d-inline-block mb-4">
+    <label for="department_id" class="block text-gray-700 font-semibold mb-2">Select Department:</label>
+    <select name="department_id" id="department_id"
+        class="border border-gray-300 rounded px-3 py-2 mb-6 focus:outline-none focus:ring focus:border-blue-300">
         <option value="">All Departments</option>
         <?php while ($dept = $dept_result->fetch_assoc()): ?>
             <option value="<?= htmlspecialchars($dept['id']) ?>" <?= ($department_id == $dept['id']) ? 'selected' : '' ?>>
@@ -69,50 +48,43 @@ $duties_result = $stmt->get_result();
     </select>
 
     <?php if ($duties_result->num_rows > 0): ?>
-    <div class="row row-cols-1 row-cols-md-2 g-4">
-        <?php while ($job = $duties_result->fetch_assoc()): ?>
-            <?php
-                $accepted = (int)$job['accepted_applicants'];
-                $remaining = (int)$job['max_applicants'] - $accepted;
-                $urgent_class = ($remaining <= 1) ? 'urgent' : '';
-            ?>
-            <div class="col">
-                <div class="card <?= $urgent_class ?>">
-                    <div class="card-body">
-                        <h5 class="card-title"><?= htmlspecialchars($job['title']) ?></h5>
-                        <p><strong>Teacher:</strong> <?= htmlspecialchars($job['teacher_name']) ?></p>
-                        <p><strong>Schedule:</strong> <?= htmlspecialchars($job['schedule']) ?></p>
-                        <p><strong>Location:</strong> <?= htmlspecialchars($job['location']) ?></p>
-                        <p><strong>Status:</strong> <?= htmlspecialchars(ucfirst($job['status'])) ?></p>
-                        <p><strong>Max Applicants:</strong> <?= (int)$job['max_applicants'] ?></p>
-                        <p><strong>Accepted:</strong> <?= $accepted ?> / <?= (int)$job['max_applicants'] ?></p>
-                        <p><strong>Description:</strong> <?= htmlspecialchars($job['description']) ?></p>
-                        <p><strong>Requirements:</strong> <?= htmlspecialchars($job['requirements']) ?></p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <?php while ($job = $duties_result->fetch_assoc()): ?>
+                <?php
+                    $accepted = (int)$job['accepted_applicants'];
+                    $remaining = (int)$job['max_applicants'] - $accepted;
+                    $urgent_class = ($remaining <= 1) ? 'border-l-4 border-red-500' : '';
+                ?>
+                <div class="bg-white shadow rounded p-4 <?= $urgent_class ?>">
+                    <h2 class="font-semibold text-lg mb-2"><?= htmlspecialchars($job['title']) ?></h2>
+                    <p class="text-gray-600"><strong>Teacher:</strong> <?= htmlspecialchars($job['teacher_name']) ?></p>
+                    <p class="text-gray-600"><strong>Schedule:</strong> <?= htmlspecialchars($job['schedule']) ?></p>
+                    <p class="text-gray-600"><strong>Location:</strong> <?= htmlspecialchars($job['location']) ?></p>
+                    <p class="text-gray-600"><strong>Status:</strong> <?= htmlspecialchars(ucfirst($job['status'])) ?></p>
+                    <p class="text-gray-600"><strong>Max Applicants:</strong> <?= (int)$job['max_applicants'] ?></p>
+                    <p class="text-gray-600"><strong>Accepted:</strong> <?= $accepted ?> / <?= (int)$job['max_applicants'] ?></p>
+                    <p class="text-gray-600"><strong>Description:</strong> <?= htmlspecialchars($job['description']) ?></p>
+                    <p class="text-gray-600"><strong>Requirements:</strong> <?= htmlspecialchars($job['requirements']) ?></p>
 
-                        <?php if ($accepted < (int)$job['max_applicants']): ?>
-                            <a href="apply.php?job_id=<?= (int)$job['id'] ?>" class="btn btn-primary btn-sm">Apply</a>
-                        <?php else: ?>
-                            <span class="text-muted">Full</span>
-                        <?php endif; ?>
-                    </div>
-                    <div class="card-footer text-muted">
-                        Posted on: <?= date('M d, Y', strtotime($job['posted_date'])) ?>
-                    </div>
+                    <?php if ($accepted < (int)$job['max_applicants']): ?>
+                        <a href="index.php?page=apply&job_id=<?= (int)$job['id'] ?>"
+                           class="inline-block mt-3 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-semibold">
+                           Apply
+                        </a>
+                    <?php else: ?>
+                        <span class="inline-block mt-3 text-gray-500 font-semibold">Full</span>
+                    <?php endif; ?>
                 </div>
-            </div>
-        <?php endwhile; ?>
-    </div>
+            <?php endwhile; ?>
+        </div>
     <?php else: ?>
-        <p>No duties available.</p>
+        <p class="text-gray-600">No duties available.</p>
     <?php endif; ?>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.getElementById('department_id').addEventListener('change', function() {
     const deptId = this.value;
-    window.location.href = deptId ? `?department_id=${deptId}` : 'browse-duty.php';
+    window.location.href = deptId ? `index.php?page=browse-duty&department_id=${deptId}` : 'index.php?page=browse-duty';
 });
 </script>
-</body>
-</html>

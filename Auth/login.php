@@ -6,30 +6,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
 
-    // Check user
     $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? LIMIT 1");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($user = $result->fetch_assoc()) {
-        // Compare raw password (no hashing)
         if ($password === $user['password']) {
-            // Save session
             $_SESSION['user_id']   = $user['id'];
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['role']      = $user['role'];
 
-            // Redirect by role
             switch ($user['role']) {
                 case "admin":
-                    header("Location: ../Admin/index.php");
+                    header("Location: ../index.php?page=dashboard");
                     break;
                 case "teacher":
-                    header("Location: ../Teachers/index.php");
+                    header("Location: ../index.php?page=dashboard");
                     break;
                 default: // student
-                    header("Location: ../Students/index.php");
+                    header("Location: ../index.php?page=dashboard");
                     break;
             }
             exit;
