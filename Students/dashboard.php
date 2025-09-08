@@ -5,8 +5,8 @@
     <div class="bg-white shadow rounded p-4">
         <h2 class="font-semibold text-lg mb-2">Quick Links</h2>
         <ul class="text-gray-600 space-y-1">
-            <li><a href="apply.php" class="hover:underline text-blue-500">Apply for Duty</a></li>
-            <li><a href="my-application.php" class="hover:underline text-blue-500">View Applications</a></li>
+            <li><a href="index.php?page=apply" class="hover:underline text-blue-500">Apply for Duty</a></li>
+            <li><a href="index.php?page=my-application" class="hover:underline text-blue-500">View Applications</a></li>
         </ul>
     </div>
     <div class="bg-white shadow rounded p-4">

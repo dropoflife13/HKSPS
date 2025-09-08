@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../modals/department.php';
+require_once __DIR__ . '/../modals/admin/department.php';
 showDepartmentModals(); 
 
 $departments = $conn->query("SELECT * FROM departments ORDER BY id ASC");
@@ -39,28 +39,16 @@ $departments = $conn->query("SELECT * FROM departments ORDER BY id ASC");
                     <td class="px-4 py-2"><?= htmlspecialchars($dept['name']) ?></td>
                     <td class="px-4 py-2"><?= htmlspecialchars($dept['description']) ?></td>
                     <td class="px-4 py-2 space-x-2">
-                        <!-- Edit Button -->
-                        <button 
+                        <button
                             class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded shadow-sm text-sm transition"
-                            onclick="
-                                document.getElementById('editDeptId').value='<?= $dept['id'] ?>';
-                                document.getElementById('editDeptCode').value='<?= htmlspecialchars($dept['code'], ENT_QUOTES) ?>';
-                                document.getElementById('editDeptName').value='<?= htmlspecialchars($dept['name'], ENT_QUOTES) ?>';
-                                document.getElementById('editDeptDesc').value='<?= htmlspecialchars($dept['description'], ENT_QUOTES) ?>';
-                                openModal('editDeptModal');
-                            ">
+                            onclick="openModal('editDeptModal<?= $dept['id'] ?>')">
                             Edit
                         </button>
                         <button
-    class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded shadow-sm text-sm transition"
-    onclick="
-        document.getElementById('deleteDeptId').value='<?= $dept['id'] ?>';
-        openModal('deleteDeptModal');
-    ">
-    Delete
-</button>
-
-
+                            class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded shadow-sm text-sm transition"
+                            onclick="openModal('deleteDeptModal<?= $dept['id'] ?>')">
+                            Delete
+                        </button>
                     </td>
                 </tr>
                 <?php endwhile; ?>

@@ -1,6 +1,6 @@
 <?php
 include 'config/init.php';
-
+define('BASE_PATH', __DIR__);
 if (!isset($_SESSION['user_name']) || !isset($_SESSION['role'])) {
     header("Location: Auth/login.php");
     exit();
