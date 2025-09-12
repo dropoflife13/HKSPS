@@ -1,9 +1,17 @@
 <?php
+
 include 'config/conn.php';
+
+// Ensure student is logged in
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
+    header("Location: Auth/login.php");
+    exit(); 
+}
 
 $student_id = $_SESSION['user_id'];
 $job_id = $_GET['job_id'] ?? 0;
 
+// Fetch the job
 $stmt = $conn->prepare("SELECT * FROM job_postings WHERE id = ?");
 $stmt->bind_param("i", $job_id);
 $stmt->execute();
@@ -12,9 +20,10 @@ $job = $job_result->fetch_assoc();
 
 $message = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $job) {
     $cover_letter = trim($_POST['cover_letter'] ?? '');
 
+    // Prevent duplicate application
     $check = $conn->prepare("SELECT id FROM applications WHERE student_id = ? AND job_id = ?");
     $check->bind_param("ii", $student_id, $job_id);
     $check->execute();
@@ -23,10 +32,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($check_result->num_rows > 0) {
         $message = '<p class="text-red-500 font-semibold">⚠️ You already applied for this duty.</p>';
     } else {
-        $insert = $conn->prepare("INSERT INTO applications (job_id, student_id, applied_date, cover_letter) VALUES (?, ?, CURDATE(), ?)");
+        // Insert the application
+        $insert = $conn->prepare("
+            INSERT INTO applications (job_id, student_id, applied_date, cover_letter, status)
+            VALUES (?, ?, NOW(), ?, 'pending')
+        ");
         $insert->bind_param("iis", $job_id, $student_id, $cover_letter);
 
         if ($insert->execute()) {
+            // Log activity
+            $activity = $conn->prepare("
+                INSERT INTO activities (user_id, action_type, description, job_id)
+                VALUES (?, 'Application Submitted', 'Applied for a job', ?)
+            ");
+            $activity->bind_param("ii", $student_id, $job_id);
+            $activity->execute();
+            $activity->close();
+
             $message = '<p class="text-green-600 font-semibold">✅ Application submitted successfully!</p>';
         } else {
             $message = '<p class="text-red-500 font-semibold">❌ Failed to submit application. Please try again.</p>';
@@ -47,7 +69,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </h2>
             <p class="text-gray-600 mb-2"><strong>Description:</strong> <?= htmlspecialchars($job['description']) ?></p>
             <p class="text-gray-600 mb-2"><strong>Schedule:</strong> <?= htmlspecialchars($job['schedule']) ?></p>
-            <p class="text-gray-600 mb-4"><strong>Location:</strong> <?= htmlspecialchars($job['location']) ?></p>
+            <p class="text-gray-600 mb-2"><strong>Location:</strong> <?= htmlspecialchars($job['location']) ?></p>
+            <p class="text-gray-600 mb-2"><strong>Requirements:</strong> <?= htmlspecialchars($job['requirements']) ?></p>
+            <p class="text-gray-600 mb-4"><strong>Max Applicants:</strong> <?= (int)$job['max_applicants'] ?></p>
 
             <form method="POST" class="space-y-4">
                 <div>
@@ -62,6 +86,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
         </div>
     <?php else: ?>
-        <p class="text-red-500 font-semibold">Job not found.</p>
+        <p class="text-red-500 font-semibold">❌ Job not found.</p>
     <?php endif; ?>
 </div>

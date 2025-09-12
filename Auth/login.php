@@ -11,11 +11,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $stmt->execute();
     $result = $stmt->get_result();
 
-    if ($user = $result->fetch_assoc()) {
-        if ($password === $user['password']) {
-            $_SESSION['user_id']   = $user['id'];
-            $_SESSION['user_name'] = $user['name'];
-            $_SESSION['role']      = $user['role'];
+if ($user = $result->fetch_assoc()) {
+    if ($password === $user['password']) {
+        $_SESSION['user_id']   = $user['id'];
+        $_SESSION['user_name'] = $user['name'];
+        $_SESSION['role']      = $user['role'];
+        $_SESSION['department_id'] = $user['department_id']; // ✅ add this
+
 
             switch ($user['role']) {
                 case "admin":
@@ -52,6 +54,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     fontFamily: {
                         'sans': ['Inter', 'system-ui', 'sans-serif'],
                     },
+                    colors: {
+                        'hk-green': {
+                            50: '#eff1ed',
+                            100: '#f0fff1',
+                            200: '#d8f3dc',
+                            300: '#b7e4c7',
+                            400: '#52b788',
+                            500: '#40916c',
+                            600: '#1b4332',
+                            700: '#081c15',
+                            800: '#071a14',
+                            900: '#051611',
+                        }
+                    },
                     animation: {
                         'float': 'float 6s ease-in-out infinite',
                         'glow': 'glow 2s ease-in-out infinite alternate',
@@ -65,13 +81,35 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     </script>
     <style>
+
+            .icon-inset {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-size: 14px;
+    pointer-events: none; /* so clicks go through */
+    z-index: 10;
+}
+
+.right-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 10;
+}
         @keyframes float {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
             50% { transform: translateY(-20px) rotate(5deg); }
         }
         @keyframes glow {
-            from { box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
-            to { box-shadow: 0 0 30px rgba(139, 92, 246, 0.8), 0 0 40px rgba(139, 92, 246, 0.3); }
+            from { box-shadow: 0 0 20px rgba(64, 145, 108, 0.5); }
+            to { box-shadow: 0 0 30px rgba(64, 145, 108, 0.8), 0 0 40px rgba(64, 145, 108, 0.3); }
         }
         @keyframes slideUp {
             from { transform: translateY(30px); opacity: 0; }
@@ -87,11 +125,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
         @keyframes pulseGlow {
             0%, 100% { 
-                box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+                box-shadow: 0 0 20px rgba(64, 145, 108, 0.3);
                 transform: scale(1);
             }
             50% { 
-                box-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
+                box-shadow: 0 0 40px rgba(64, 145, 108, 0.6);
                 transform: scale(1.02);
             }
         }
@@ -106,7 +144,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
         .mesh-bg {
-            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+            background: linear-gradient(-45deg, #081c15, #1b4332, #40916c, #52b788);
             background-size: 400% 400%;
             animation: gradient 15s ease infinite;
         }
@@ -116,13 +154,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             100% { background-position: 0% 50%; }
         }
         .input-glow:focus {
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1), 0 0 20px rgba(139, 92, 246, 0.2);
+            box-shadow: 0 0 0 3px rgba(64, 145, 108, 0.1), 0 0 20px rgba(64, 145, 108, 0.2);
         }
         .floating-shape {
             position: absolute;
             border-radius: 50%;
             background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
             backdrop-filter: blur(10px);
+        }
+        .hk-gradient-bg {
+            background: linear-gradient(135deg, #081c15 0%, #40916c 100%);
+        }
+        .hk-gradient-text {
+            background: linear-gradient(135deg, #081c15 0%, #40916c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
     </style>
 </head>
@@ -144,31 +191,29 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <div class="min-h-screen flex items-center justify-center p-3 relative z-10">
         <div class="w-full max-w-sm">
             <!-- Back to Home Button -->
-        
-
-            <!-- Login Card -->
-             
-            <div class="glass-strong rounded-2xl p-6 shadow-2xl animate-slide-up" style="animation-delay: 0.2s;">
-                <!-- Logo and Title -->
-                  <div class="mb-4 animate-slide-up">
-                <a href="../landing.php" class="inline-flex items-center text-black hover:text-yellow transition-colors duration-200 group text-sm">
+            <div class="mb-4 animate-slide-up">
+                <a href="../landing.php" class="inline-flex items-center text-white hover:text-hk-green-200 transition-colors duration-200 group text-sm">
                     <svg class="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
                     Back to Home
                 </a>
-      
+            </div>
+
+            <!-- Login Card -->
+            <div class="glass-strong rounded-2xl p-6 shadow-2xl animate-slide-up" style="animation-delay: 0.2s;">
+                <!-- Logo and Title -->
                 <div class="text-center mb-6">
                     <div class="flex items-center justify-center space-x-2 mb-3">
-                        <div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center animate-pulse-glow">
+                        <div class="w-10 h-10 hk-gradient-bg rounded-lg flex items-center justify-center animate-pulse-glow">
                             <span class="text-white font-bold text-lg">HK</span>
                         </div>
-                        <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">HAWAK KAMAY</span>
+                        <span class="text-xl font-bold hk-gradient-text">HAWAK KAMAY</span>
                     </div>
                     <h2 class="text-2xl font-black text-gray-800 mb-1">Welcome Back</h2>
                     <p class="text-gray-600 text-sm">Sign in to continue your journey</p>
                 </div>
-                  </div>
+
                 <!-- Error Message (PHP Integration) -->
                 <?php if (!empty($error)): ?>
                     <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -193,13 +238,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 </svg>
                             </div>
                             <input type="email" name="email" required 
-                                   class="input-glow w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-all duration-300 bg-white/80 backdrop-blur-sm text-sm"
+                                   class="input-glow w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 focus:border-hk-green-500 focus:outline-none transition-all duration-300 bg-white/80 backdrop-blur-sm text-sm"
                                    placeholder="Enter your email">
                         </div>
                     </div>
 
                     <!-- Password Field -->
-                    <div class="space-y-1">
+                    <div class="space-y-1"> 
                         <label class="block text-gray-700 font-medium text-xs uppercase tracking-wider">Password</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -208,7 +253,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 </svg>
                             </div>
                             <input type="password" name="password" required id="password"
-                                   class="input-glow w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-all duration-300 bg-white/80 backdrop-blur-sm text-sm"
+                                   class="input-glow w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 focus:border-hk-green-500 focus:outline-none transition-all duration-300 bg-white/80 backdrop-blur-sm text-sm"
                                    placeholder="Enter your password">
                             <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center">
                                 <svg id="eye-icon" class="h-4 w-4 text-gray-400 hover:text-gray-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,17 +267,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <!-- Remember Me & Forgot Password -->
                     <div class="flex items-center justify-between text-xs">
                         <label class="flex items-center">
-                            <input type="checkbox" class="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50">
+                            <input type="checkbox" class="rounded border-gray-300 text-hk-green-600 shadow-sm focus:border-hk-green-300 focus:ring focus:ring-hk-green-200 focus:ring-opacity-50">
                             <span class="ml-2 text-gray-600">Remember me</span>
                         </label>
-                        <a href="#" class="text-purple-600 hover:text-purple-800 font-medium transition-colors duration-200">
+                        <a href="#" class="text-hk-green-600 hover:text-hk-green-800 font-medium transition-colors duration-200">
                             Forgot password?
                         </a>
                     </div>
 
                     <!-- Login Button -->
                     <button type="submit" 
-                            class="group w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:from-purple-700 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-purple-300 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg text-sm">
+                            class="group w-full hk-gradient-bg text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-hk-green-300 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg text-sm">
                         <span class="flex items-center justify-center">
                             Sign In to Your Account
                             <svg class="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -241,9 +286,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         </span>
                     </button>
 
-                    <hr>
-
-                    <a href="login.php">Login as Google</a>
+                    <!-- Google Login Button -->
+                    <div class="mt-4">
+                        <a href="login.php" class="block w-full bg-white/60 backdrop-blur-sm border-2 border-gray-200 text-gray-700 font-bold py-3 px-4 rounded-lg hover:bg-white/80 hover:border-gray-300 hover:shadow-md transition-all duration-300 transform hover:scale-[1.02] text-sm text-center">
+                            <span class="flex items-center justify-center">
+                                <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                </svg>
+                                Login with Google
+                            </span>
+                        </a>
+                    </div>
                 </form>
 
                 <!-- Register Link -->
@@ -251,7 +307,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <p class="text-gray-600 mb-3 text-sm">Don't have an account yet?</p>
                     <a href="register.php">
                         <button type="button" 
-                                class="w-full bg-white/60 backdrop-blur-sm border-2 border-purple-200 text-purple-700 font-bold py-3 px-4 rounded-lg hover:bg-white/80 hover:border-purple-300 hover:shadow-md transition-all duration-300 transform hover:scale-[1.02] text-sm">
+                                class="w-full bg-white/60 backdrop-blur-sm border-2 border-hk-green-200 text-hk-green-700 font-bold py-3 px-4 rounded-lg hover:bg-white/80 hover:border-hk-green-300 hover:shadow-md transition-all duration-300 transform hover:scale-[1.02] text-sm">
                             Create New Account
                         </button>
                     </a>
@@ -314,4 +370,4 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     </script>
 
 </body>
-</html>   
+</html>

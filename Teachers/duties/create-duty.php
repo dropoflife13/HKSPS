@@ -2,139 +2,87 @@
 session_start();
 include("../../config/conn.php");
 
+header('Content-Type: application/json');
+
 // Only teachers allowed
 if (!isset($_SESSION['user_name']) || $_SESSION['role'] !== 'teacher') {
-    header("Location: ../Auth/login.php");
-    exit();
+    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+    exit;
 }
 
 $teacherId = $_SESSION['user_id'];
-$successMsg = '';
-$errorMsg = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = $_POST['title'];
-    $department_id = $_POST['department_id'];
-    $description = $_POST['description'];
-    $requirements = $_POST['requirements'] ?? '';
-    $schedule = $_POST['schedule'];
-    $location = $_POST['location'] ?? '';
+    $title = trim($_POST['title'] ?? '');
+    $department_id = (int)($_POST['department_id'] ?? 0);
+    $description = trim($_POST['description'] ?? '');
+    $requirements = trim($_POST['requirements'] ?? '');
+    $schedule = trim($_POST['schedule'] ?? '');
+    $location = trim($_POST['location'] ?? '');
     $status = $_POST['status'] ?? 'open';
     $max_applicants = (int)($_POST['max_applicants'] ?? 1);
+    $deadline = $_POST['deadline'] ?? date('Y-m-d', strtotime('+7 days'));
+
+    // Validate required fields
+    if (empty($title) || empty($department_id) || empty($description) || empty($schedule)) {
+        echo json_encode(['success' => false, 'error' => 'All required fields must be filled']);
+        exit;
+    }
 
     $stmt = $conn->prepare("
         INSERT INTO job_postings 
         (title, department_id, description, requirements, schedule, location, posted_by_id, posted_date, deadline, status, max_applicants, current_applicants)
-        VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE(), CURDATE() + INTERVAL 7 DAY, ?, ?, 0)
+        VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, 0)
     ");
+
+    if (!$stmt) {
+        echo json_encode(['success' => false, 'error' => $conn->error]);
+        exit;
+    }
+
     $stmt->bind_param(
-        "sissssisis",
-        $title,
-        $department_id,
-        $description,
-        $requirements,
-        $schedule,
-        $location,
-        $teacherId,
-        $status,
-        $max_applicants
+        "sissssissi", // 10 placeholders → 10 values
+        $title,            
+        $department_id,    
+        $description,      
+        $requirements,     
+        $schedule,         
+        $location,         
+        $teacherId,        
+        $deadline,         
+        $status,           
+        $max_applicants    
     );
 
     if ($stmt->execute()) {
-        $successMsg = "Duty created successfully!";
+        $lastId = $conn->insert_id;
+
+        // Fetch duty details to return
+        $duty = $conn->query("
+            SELECT jp.*, d.code AS department_code, d.name AS department_name 
+            FROM job_postings jp 
+            LEFT JOIN departments d ON jp.department_id = d.id 
+            WHERE jp.id = $lastId
+        ")->fetch_assoc();
+
+        // Log activity
+        $activity = $conn->prepare("
+            INSERT INTO activities (user_id, action_type, description, job_id)
+            VALUES (?, 'Job Posted', 'Posted a new duty', ?)
+        ");
+        $activity->bind_param("ii", $teacherId, $lastId);
+        $activity->execute();
+        $activity->close();
+
+        echo json_encode(['success' => true, 'duty' => $duty]);
     } else {
-        $errorMsg = "Error creating duty: " . $stmt->error;
+        echo json_encode(['success' => false, 'error' => $stmt->error]);
     }
+
+    $stmt->close();
+    exit();
 }
 
-// Fetch departments for dropdown
-$departments = $conn->query("SELECT id, name FROM departments ORDER BY name");
+echo json_encode(['success' => false, 'error' => 'Invalid request']);
+exit;
 ?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Create Duty</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-main { margin-left:250px; padding:20px; max-width:800px; }
-.card-form { padding:20px; margin-bottom:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-</style>
-</head>
-<body>
-
-<main>
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1>Create Duty</h1>
-        <a href="../post-duty.php" class="btn btn-secondary">Go Back</a>
-    </div>
-
-    <?php if ($successMsg): ?>
-        <div class="alert alert-success"><?= htmlspecialchars($successMsg) ?></div>
-    <?php endif; ?>
-    <?php if ($errorMsg): ?>
-        <div class="alert alert-danger"><?= htmlspecialchars($errorMsg) ?></div>
-    <?php endif; ?>
-
-    <div class="card card-form">
-        <form method="POST">
-            <div class="row g-2 mb-2">
-                <div class="col-md-6">
-                    <label class="form-label">Title</label>
-                    <input type="text" name="title" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Department</label>
-                    <select name="department_id" class="form-select" required>
-                        <?php while($dept = $departments->fetch_assoc()): ?>
-                            <option value="<?= $dept['id'] ?>"><?= htmlspecialchars($dept['name']) ?></option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-            </div>
-
-            <div class="row g-2 mb-2">
-                <div class="col-md-6">
-                    <label class="form-label">Schedule</label>
-                    <input type="text" name="schedule" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Location</label>
-                    <input type="text" name="location" class="form-control">
-                </div>
-            </div>
-
-            <div class="row g-2 mb-2">
-                <div class="col-md-6">
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-select">
-                        <option value="open">Open</option>
-                        <option value="closed">Closed</option>
-                        <option value="filled">Filled</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Max Applicants</label>
-                    <input type="number" name="max_applicants" class="form-control" value="1" min="1">
-                </div>
-            </div>
-
-            <div class="mb-2">
-                <label class="form-label">Description</label>
-                <textarea name="description" class="form-control" rows="3" required></textarea>
-            </div>
-
-            <div class="mb-2">
-                <label class="form-label">Requirements</label>
-                <textarea name="requirements" class="form-control" rows="2"></textarea>
-            </div>
-
-            <button type="submit" class="btn btn-success mt-2">Create Duty</button>
-        </form>
-    </div>
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>

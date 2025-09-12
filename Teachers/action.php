@@ -1,36 +1,62 @@
 <?php
 session_start();
-include("../config/conn.php");
 
-$teacherId = $_SESSION['user_id'] ?? 0;
-$appId = $_GET['id'] ?? 0;
-$action = $_GET['action'] ?? '';
+require_once __DIR__ . '/../config/conn.php';
+header('Content-Type: application/json');
 
-if (!$appId || !in_array($action, ['approved','rejected'])) {
-    die('Invalid request');
+// Only teachers allowed
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
+    echo json_encode(["success" => false, "error" => "Unauthorized"]);
+    exit;
 }
 
-// Ensure the application belongs to this teacher
-$stmt = $conn->prepare("
-    SELECT a.id 
-    FROM applications a
-    JOIN job_postings jp ON a.job_id = jp.id
-    WHERE a.id = ? AND jp.posted_by_id = ?
-");
-$stmt->bind_param("ii", $appId, $teacherId);
-$stmt->execute();
-$result = $stmt->get_result();
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id = intval($_POST['id'] ?? 0);
+    $action = $_POST['action'] ?? '';
 
-if ($result->num_rows === 0) {
-    die('Unauthorized');
+    if (!$id || !in_array($action, ['approved','rejected'])) {
+        echo json_encode(["success" => false, "error" => "Invalid request"]);
+        exit;
+    }
+
+    // Get job_id first (so we can safely update job_postings later)
+    $jobQuery = $conn->prepare("SELECT job_id, status FROM applications WHERE id = ?");
+    $jobQuery->bind_param("i", $id);
+    $jobQuery->execute();
+    $result = $jobQuery->get_result();
+    $application = $result->fetch_assoc();
+
+    if (!$application) {
+        echo json_encode(["success" => false, "error" => "Application not found"]);
+        exit;
+    }
+
+    $jobId = $application['job_id'];
+    $oldStatus = $application['status'];
+
+    // Update application status
+    $stmt = $conn->prepare("UPDATE applications SET status = ? WHERE id = ?");
+    $stmt->bind_param("si", $action, $id);
+
+    if ($stmt->execute()) {
+        // ✅ Adjust applicant count safely
+        if ($oldStatus !== 'approved' && $action === 'approved') {
+            // approving → increment
+            $update = $conn->prepare("UPDATE job_postings SET current_applicants = current_applicants + 1 WHERE id = ?");
+            $update->bind_param("i", $jobId);
+            $update->execute();
+        } elseif ($oldStatus === 'approved' && $action === 'rejected') {
+            // rejecting a previously approved → decrement
+            $update = $conn->prepare("UPDATE job_postings SET current_applicants = GREATEST(current_applicants - 1, 0) WHERE id = ?");
+            $update->bind_param("i", $jobId);
+            $update->execute();
+        }
+
+        echo json_encode(["success" => true]);
+    } else {
+        echo json_encode(["success" => false, "error" => "Database error"]);
+    }
+    exit;
 }
 
-// Update status
-$update = $conn->prepare("UPDATE applications SET status = ? WHERE id = ?");
-$update->bind_param("si", $action, $appId);
-$update->execute();
-
-// Redirect back to applicants page
-header("Location: applicants.php");
-exit;
-?>
+echo json_encode(["success" => false, "error" => "Invalid method"]);

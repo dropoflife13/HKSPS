@@ -26,7 +26,7 @@ if ($department_id) {
 $query .= " AND (SELECT COUNT(*) FROM applications a WHERE a.job_id = jp.id AND a.status = 'approved') < jp.max_applicants";
 
 $query .= " ORDER BY jp.posted_date DESC";
-
+    
 $stmt = $conn->prepare($query);
 $stmt->bind_param($types, ...$params);
 $stmt->execute();

@@ -1,18 +1,27 @@
 <?php
+
 include("config/conn.php");
+
+// Ensure student is logged in
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
+    header("Location: Auth/login.php");
+    exit();
+}
+
+$studentId = $_SESSION['user_id'];
 
 $stmt = $conn->prepare("
     SELECT 
         a.id AS application_id,
         j.title AS job_title,
-        d.name AS department_name,
+        d.code AS department_code, 
         a.status,
-        a.created_at
+        a.applied_date
     FROM applications a
     JOIN job_postings j ON a.job_id = j.id
     JOIN departments d ON j.department_id = d.id
     WHERE a.student_id = ?
-    ORDER BY a.created_at DESC
+    ORDER BY a.applied_date DESC
 ");
 $stmt->bind_param("i", $studentId);
 $stmt->execute();
@@ -37,7 +46,7 @@ $result = $stmt->get_result();
                     <?php while ($row = $result->fetch_assoc()): ?>
                         <tr>
                             <td class="px-4 py-2"><?php echo htmlspecialchars($row['job_title']); ?></td>
-                            <td class="px-4 py-2"><?php echo htmlspecialchars($row['department_name']); ?></td>
+                            <td class="px-4 py-2"><?php echo htmlspecialchars($row['department_code']); ?></td>
                             <td class="px-4 py-2">
                                 <?php 
                                     $statusColors = [
@@ -51,13 +60,13 @@ $result = $stmt->get_result();
                                     <?php echo ucfirst($row['status']); ?>
                                 </span>
                             </td>
-                            <td class="px-4 py-2"><?php echo date("M d, Y", strtotime($row['created_at'])); ?></td>
+                            <td class="px-4 py-2"><?php echo date("M d, Y", strtotime($row['applied_date'])); ?></td>
                         </tr>
                     <?php endwhile; ?>
                 </tbody>
             </table>
         </div>
     <?php else: ?>
-        <p class="text-gray-500">You have not applied for any jobs yet.</p>
+        <p class="text-gray-500">You have not applied for any duties yet.</p>
     <?php endif; ?>
 </div>

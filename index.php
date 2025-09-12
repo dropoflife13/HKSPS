@@ -11,7 +11,7 @@ $roleFolders = [
     'teacher' => 'Teachers',
     'admin' => 'Admin'
 ];
-
+    
 $userRole = $_SESSION['role'];
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
 
@@ -24,6 +24,7 @@ if ($folder && file_exists(__DIR__ . "/{$folder}/{$page}.php")) {
 elseif (file_exists(__DIR__ . "/Shared/{$page}.php")) {
     $file = __DIR__ . "/Shared/{$page}.php";
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
